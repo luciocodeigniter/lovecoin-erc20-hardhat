@@ -1,5 +1,6 @@
 import {
   loadFixture,
+  time, // para manipulação de tempo
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import hre from "hardhat";
@@ -154,10 +155,114 @@ describe("LoveCoin tests", function () {
     // habilitamos o mint pelo `owner`
     // definindo que cada carteira poderá mintar 1000n de cada vez
     const mintAmount = 1000n; // em wei -> na menor fração
-    await loveCoin.setMintDelay(mintAmount);
+    await loveCoin.setMintAmount(mintAmount);
 
+    // antes do mint
+    const balanceOtherBefore = await loveCoin.balanceOf(otherAccount.address);
 
+    // agora preciso mintar para o `otherAccount`
+    const instance = loveCoin.connect(otherAccount);
+    await instance.mint();
 
+    // depois do mint
+    const balanceOtherAfter = await loveCoin.balanceOf(otherAccount.address);
+
+    // então o `balanceOtherAfter` deve ter a soma dele mesmo com o `mintAmount`
+    expect(balanceOtherAfter).to.equal(balanceOtherBefore + mintAmount);
   });
+
+  it("Should mint twice (different accounts)", async () => {
+    const { loveCoin, owner, otherAccount, thirdAccount } = await loadFixture(deployFixture);
+
+    /**
+     * ! Nesse teste o objetivo é fazer o mint duas vezes seguidas para contas diferentes.
+     * ! Portando o expect é apenas para termos o `check` que passou.
+     */
+
+    // habilitamos o mint pelo `owner`
+    const mintAmount = 1000n;
+    await loveCoin.setMintAmount(mintAmount);
+
+    // fazemos o mint para o `owner`
+    await loveCoin.mint();
+
+    // antes do mint
+    const balanceOtherBefore = await loveCoin.balanceOf(otherAccount.address);
+    // agora preciso mintar para o `otherAccount`
+    const instance = loveCoin.connect(otherAccount);
+    await instance.mint();
+
+    // depois do mint
+    const balanceOtherAfter = await loveCoin.balanceOf(otherAccount.address);
+
+    // então o `balanceOtherAfter` deve ter a soma dele mesmo com o `mintAmount`
+    expect(balanceOtherAfter).to.equal(balanceOtherBefore + mintAmount);
+  });
+
+
+  it("Should mint twice (same account)", async () => {
+    const { loveCoin, owner, otherAccount, thirdAccount } = await loadFixture(deployFixture);
+
+    // habilitamos o mint pelo `owner`
+    const mintAmount = 1000n;
+    await loveCoin.setMintAmount(mintAmount);
+
+    // antes do mint
+    const balanceOwnerBefore = await loveCoin.balanceOf(owner.address);
+
+    // primeiro mint
+    await loveCoin.mint();
+
+    // agora precisamos avançar o tempo
+    const mintDelay = 60 * 60 * 24 * 2; // Dois dias em segundos
+
+    // avançamos 2 dias
+    await time.increase(mintDelay);
+
+    // fazemos o segundo mint
+    await loveCoin.mint();
+
+    // depois do mint
+    const balanceOwnerAfter = await loveCoin.balanceOf(owner.address);
+
+    // agora validamos o saldo anterior + 2 mints (mintAmount * 2n)
+    expect(balanceOwnerAfter).to.equal(balanceOwnerBefore + (mintAmount * 2n));
+  });
+
+
+  it("Should FAIL setMintAmount", async () => {
+    const { loveCoin, owner, otherAccount, thirdAccount } = await loadFixture(deployFixture);
+    const mintAmount = 1000n;
+    const instance = loveCoin.connect(otherAccount);
+    await expect(instance.setMintAmount(mintAmount)).to.be.revertedWith("You do not have permission");
+  });
+
+  it("Should FAIL setMintDelay", async () => {
+    const { loveCoin, owner, otherAccount, thirdAccount } = await loadFixture(deployFixture);
+    const mintDelay = 60 * 60 * 24;
+    const instance = loveCoin.connect(otherAccount);
+    await expect(instance.setMintDelay(mintDelay)).to.be.revertedWith("You do not have permission");
+  });
+
+  it("Should FAIL mint", async () => {
+    const { loveCoin, owner, otherAccount, thirdAccount } = await loadFixture(deployFixture);
+
+    // falhará porque não foi habilitado, mesmo que seja o owner
+    await expect(loveCoin.mint()).to.be.revertedWith("Minting is not enabled");
+  });
+
+  it("Should FAIL mint twice", async () => {
+    const { loveCoin, owner, otherAccount, thirdAccount } = await loadFixture(deployFixture);
+
+    // ativamos o mint
+    await loveCoin.setMintAmount(1000n);
+
+    // primeiro mint
+    await loveCoin.mint();
+
+    // falhará porque não teve o delay de tempo
+    await expect(loveCoin.mint()).to.be.revertedWith("You can't mint twice in a row");
+  });
+
 
 });
