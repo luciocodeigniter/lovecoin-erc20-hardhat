@@ -3,11 +3,11 @@
 
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const PiticoBidugoCoinModule = buildModule("PiticoBidugoCoinModule", (m) => {
+const LoveCoinModule = buildModule("LoveCoinModule", (m) => {
   
-  const piticoBidugoCoin = m.contract("PiticoBidugoCoin");
+  const loveCoin = m.contract("LoveCoin");
 
-  return { piticoBidugoCoin };
+  return { piticoBidugoCoin: loveCoin };
 });
 
-export default PiticoBidugoCoinModule;
+export default LoveCoinModule;
