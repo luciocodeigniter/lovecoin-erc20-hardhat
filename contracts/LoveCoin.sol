@@ -25,29 +25,28 @@ contract LoveCoin is ERC20 {
         _owner = msg.sender;
 
         // Preciso emitir token para o dono do contrato
-        _mint(msg.sender, 1000 * 10 ** 18); // 1000 LOVE
+        _mint(msg.sender, 10000000 * 10 ** 18); // 10 MILHÕES DE LOVE
     }
 
     // função para cunhar novos `LOVE` para testes durante o desenvolvimento
-    //! EVIDENTE que essa função só deverá ser usada em ambiente de testes
-    function mint() public {
+    function mint(address _to) public onlyOwner {
         // não pode ser executada em produção, ou seja, enquanto o `_mintAmount` não for alterado pelo `owner`
         // através da função `setMintAmount` definindo um valor maior que zero, não será possível executar essa função
         require(_mintAmount > 0, "Minting is not enabled");
 
         // agora preciso proibir que o sender faça mint em sequência. Ele precisa respeitar o delay
-        // ou seja, o `block.timestamp` tem que ser superior ao `nextMint[msg.sender]`,
+        // ou seja, o `block.timestamp` tem que ser superior ao `nextMint[_to]`,
         // dessa forma implementamos o `controle por timelock`
         require(
-            block.timestamp > nextMint[msg.sender],
+            block.timestamp > nextMint[_to],
             "You can't mint twice in a row"
         );
 
-        _mint(msg.sender, _mintAmount);
+        _mint(_to, _mintAmount);
 
         // agora registro quando essa carteira poderá fazer um novo mint
         // ou seja, a partir de agora, contamos mais 2 dias para o próximo delay
-        nextMint[msg.sender] = block.timestamp + _mintDelay;
+        nextMint[_to] = block.timestamp + _mintDelay;
     }
 
     // função que é executada apenas pelo `owner` e define um novo valor para `_mintAmount`

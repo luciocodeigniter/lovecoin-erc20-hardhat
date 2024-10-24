@@ -39,9 +39,9 @@ describe("LoveCoin tests", function () {
     const { loveCoin, owner, otherAccount } = await loadFixture(deployFixture);
     const totalSupply = await loveCoin.totalSupply();
 
-    // número muito grandes (1000n * 10n ** 18n) precisamos tratar como bigint
+    // número muito grandes (10000000n * 10n ** 18n) precisamos tratar como bigint
     // por isso os `n` ao lados dos número que é a notação do typescript
-    expect(totalSupply).to.equal(1000n * 10n ** 18n);
+    expect(totalSupply).to.equal(10000000n * 10n ** 18n);
   });
 
 
@@ -50,8 +50,8 @@ describe("LoveCoin tests", function () {
     const balance = await loveCoin.balanceOf(owner.address);
 
     // note que no deploy do contrato enviamos o totalSupply para o deployer,
-    // logo ele tem que ter: `1000n * 10n ** 18n`
-    expect(balance).to.equal(1000n * 10n ** 18n);
+    // logo ele tem que ter: `10000000n * 10n ** 18n`
+    expect(balance).to.equal(10000000n * 10n ** 18n);
   });
 
   it("Should tranfer", async function () {
@@ -65,12 +65,12 @@ describe("LoveCoin tests", function () {
     const balanceOtherAfter = await loveCoin.balanceOf(otherAccount.address);
 
     // no início o `deployer` tem que ter o total suply
-    expect(balanceOwnerBefore).to.equal(1000n * 10n ** 18n);
+    expect(balanceOwnerBefore).to.equal(10000000n * 10n ** 18n);
     // no início o `otherAccount` tem que ter 0
     expect(balanceOtherBefore).to.equal(0);
 
     // depois o `deployer` tem que ter menos 10
-    expect(balanceOwnerAfter).to.equal((1000n * 10n ** 18n) - 10n);
+    expect(balanceOwnerAfter).to.equal((10000000n * 10n ** 18n) - 10n);
     // depois o `otherAccount` tem que ter 10
     expect(balanceOtherAfter).to.equal(10);
   });
@@ -161,8 +161,7 @@ describe("LoveCoin tests", function () {
     const balanceOtherBefore = await loveCoin.balanceOf(otherAccount.address);
 
     // agora preciso mintar para o `otherAccount`
-    const instance = loveCoin.connect(otherAccount);
-    await instance.mint();
+    await loveCoin.mint(otherAccount.address);
 
     // depois do mint
     const balanceOtherAfter = await loveCoin.balanceOf(otherAccount.address);
@@ -184,13 +183,13 @@ describe("LoveCoin tests", function () {
     await loveCoin.setMintAmount(mintAmount);
 
     // fazemos o mint para o `owner`
-    await loveCoin.mint();
+    await loveCoin.mint(owner.address);
 
     // antes do mint
     const balanceOtherBefore = await loveCoin.balanceOf(otherAccount.address);
+    
     // agora preciso mintar para o `otherAccount`
-    const instance = loveCoin.connect(otherAccount);
-    await instance.mint();
+    await loveCoin.mint(otherAccount.address);
 
     // depois do mint
     const balanceOtherAfter = await loveCoin.balanceOf(otherAccount.address);
@@ -211,7 +210,7 @@ describe("LoveCoin tests", function () {
     const balanceOwnerBefore = await loveCoin.balanceOf(owner.address);
 
     // primeiro mint
-    await loveCoin.mint();
+    await loveCoin.mint(owner.address);
 
     // agora precisamos avançar o tempo
     const mintDelay = 60 * 60 * 24 * 2; // Dois dias em segundos
@@ -220,7 +219,7 @@ describe("LoveCoin tests", function () {
     await time.increase(mintDelay);
 
     // fazemos o segundo mint
-    await loveCoin.mint();
+    await loveCoin.mint(owner.address);
 
     // depois do mint
     const balanceOwnerAfter = await loveCoin.balanceOf(owner.address);
@@ -248,7 +247,7 @@ describe("LoveCoin tests", function () {
     const { loveCoin, owner, otherAccount, thirdAccount } = await loadFixture(deployFixture);
 
     // falhará porque não foi habilitado, mesmo que seja o owner
-    await expect(loveCoin.mint()).to.be.revertedWith("Minting is not enabled");
+    await expect(loveCoin.mint(owner.address)).to.be.revertedWith("Minting is not enabled");
   });
 
   it("Should FAIL mint twice", async () => {
@@ -258,10 +257,10 @@ describe("LoveCoin tests", function () {
     await loveCoin.setMintAmount(1000n);
 
     // primeiro mint
-    await loveCoin.mint();
+    await loveCoin.mint(owner.address);
 
     // falhará porque não teve o delay de tempo
-    await expect(loveCoin.mint()).to.be.revertedWith("You can't mint twice in a row");
+    await expect(loveCoin.mint(owner.address)).to.be.revertedWith("You can't mint twice in a row");
   });
 
 
