@@ -13,4 +13,3 @@ A DApp conectada ao contrato permite que os usuários interajam facilmente com a
 - **Gestão de fundos**: O contrato gerencia o saldo disponível para garantir que a faucet não fique sem fundos.
 - **Integração com DApp**: A faucet se integra diretamente a uma DApp para facilitar as solicitações de tokens pelos usuários.
 
-Este contrato é altamente configurável e pode ser adaptado para diferentes redes de teste ou de produção, dependendo das necessidades da aplicação.
